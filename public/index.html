@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Soroto</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .profile-menu {
+      position: relative;
+      display: inline-block;
+    }
+
+    .profile-dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      min-width: 150px;
+      z-index: 1;
+      border-radius: 6px;
+    }
+
+    .profile-dropdown a {
+      display: block;
+      padding: 10px;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .profile-dropdown a:hover {
+      background-color: #f1f1f1;
+    }
+
+    .profile-menu:hover .profile-dropdown {
+      display: block;
+    }
+
+    .profile-icon {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* Add this for product grid styling */
+    #products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">Soroto</div>
+    <div class="nav-buttons" id="auth-buttons">
+      <a href="login.html" class="nav-btn">Login</a>
+      <a href="signup.html" class="nav-btn">Signup</a>
+    </div>
+    <div id="profile-container" class="profile-menu" style="display: none;">
+      <button class="profile-icon">👤</button>
+      <div class="profile-dropdown">
+        <a href="profile.html">Profile</a>
+        <a href="orders.html">My Orders</a>
+        <a href="#" id="logout-btn">Logout</a>
+        <a href="#" id="delete-account">Delete Account</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Categories Dropdown Navbar -->
+  <nav class="category-navbar" style="display:flex; align-items:center; gap:1rem;">
+    <label for="categorySelect">Category:</label>
+    <select id="categorySelect">
+      <option value="">-- Choose --</option>
+      <option value="Electronics">Electronics</option>
+      <option value="Fashion">Fashion</option>
+      <option value="Home">Home</option>
+      <option value="Books">Books</option>
+    </select>
+  
+    <div id="user-actions" style="margin-left:auto;">
+      <button id="wishlistBtn" title="Wishlist" aria-label="Wishlist">❤️</button>
+      <button id="cartBtn" title="Cart" aria-label="Cart">🛒</button>
+    </div>
+  </nav>
+
+  <!-- Products Grid -->
+
+  <div class="container">
+    <h1>Welcome to Soroto</h1>
+    <p>Browse our latest products below!</p>
+  </div>
+
+  <div id="products" class="product-grid"></div>
+
+  <script>
+    async function fetchProducts(category = "") {
+      try {
+        let url = 'http://localhost:3000/shop/getItems';
+        if (category) {
+          // Correct backend route for category filtering
+          url = `http://localhost:3000/shop/getItemsByCategory/${category}`;
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch products');
+
+        // Note backend returns { products } for category and { items } for all items, unify this:
+        const data = await res.json();
+
+        // Support both keys for easier handling
+        const items = data.items || data.products || [];
+
+        const container = document.getElementById('products');
+        container.innerHTML = "";
+
+        if (items.length === 0) {
+          container.innerHTML = "<p>No products available.</p>";
+          return;
+        }
+
+        items.forEach(item => {
+          const card = document.createElement('div');
+          card.style.background = '#fff';
+          card.style.borderRadius = '8px';
+          card.style.boxShadow = '0 0 5px rgba(0,0,0,0.1)';
+          card.style.padding = '15px';
+          card.style.textAlign = 'center';
+
+          card.innerHTML = `
+            <a href="productDetail.html?id=${item._id}" style="text-decoration:none; color:inherit;">
+              <img src="${item.imageUrl}" alt="${item.title}" style="width:100%; height:150px; object-fit:cover; border-radius:6px;" />
+              <h3 style="margin: 10px 0 5px;">${item.title}</h3>
+              <p style="font-size: 0.9rem; color: #555; height: 40px; overflow: hidden;">${item.description}</p>
+              <strong style="display:block; margin-top:8px; font-size:1.1rem; color:#2a9d8f;">₹${item.price.toFixed(2)}</strong>
+            </a>
+          `;
+
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error('Error loading products:', error);
+        document.getElementById('products').innerHTML = '<p style="color:red; text-align:center;">Failed to load products.</p>';
+      }
+    }
+
+    // Initial load all products
+    fetchProducts();
+
+    // Category dropdown change listener
+    document.getElementById('categorySelect').addEventListener('change', function() {
+      const category = this.value;
+      fetchProducts(category);
+    });
+
+    // Navigation buttons
+    document.getElementById('wishlistBtn').addEventListener('click', () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('You need to login first');
+        return;
+      }
+      window.location.href = 'wishlist.html';
+    });
+
+    document.getElementById('cartBtn').addEventListener('click', () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('You need to login first');
+        return;
+      }
+      window.location.href = 'cart.html';
+    });
+
+    // Show profile dropdown if logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+      document.getElementById('auth-buttons').style.display = 'none';
+      document.getElementById('profile-container').style.display = 'inline-block';
+    }
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      alert('Logged out successfully!');
+      window.location.reload();
+    });
+
+    // Delete account
+    document.getElementById('delete-account').addEventListener('click', async () => {
+      const confirmDelete = confirm('Are you sure you want to delete your account? This action cannot be undone.');
+      if (!confirmDelete) return;
+
+      try {
+        const res = await fetch('http://localhost:3000/auth/deleteUser', {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to delete account');
+
+        alert('Account deleted successfully');
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+      } catch (err) {
+        alert('Error: ' + err.message);
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+<footer class="footer">
+  soroto
+</footer>
+</html>

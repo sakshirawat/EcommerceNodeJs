@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Cart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+      padding: 15px 0;
+    }
+
+    .cart-item h4 {
+      margin: 0;
+    }
+
+    .cart-item p {
+      margin: 5px 0;
+    }
+
+    .remove-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .remove-btn:hover {
+      background-color: #c82333;
+    }
+
+    .total {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: right;
+      margin-top: 20px;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 30px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .checkout-btn:hover {
+      background-color: #218838;
+    }
+
+    .empty-cart {
+      text-align: center;
+      color: #666;
+      font-size: 18px;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>My Cart</h2>
+    <div id="cart-items"></div>
+    <div class="total" id="cart-total"></div>
+    <button class="checkout-btn" id="checkout-btn">Proceed to Checkout</button>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert('Please login first.');
+      window.location.href = 'login.html';
+    }
+
+    async function fetchCart() {
+      try {
+        const response = await fetch('http://localhost:3000/shop/getcart', {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch cart');
+        }
+
+        const data = await response.json();
+        const cartItems = data.cart.Items;
+        const cartTotal = data.cart.CartTotal;
+
+        const cartContainer = document.getElementById('cart-items');
+        const totalDiv = document.getElementById('cart-total');
+        cartContainer.innerHTML = '';
+
+        if (cartItems.length === 0) {
+          cartContainer.innerHTML = '<p class="empty-cart">Your cart is empty.</p>';
+          totalDiv.innerHTML = '';
+          document.getElementById('checkout-btn').style.display = 'none'
+          return;
+        }
+
+        cartItems.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'cart-item';
+          div.innerHTML = `
+            <div>
+              <h4>${item.ItemName}</h4>
+              <p>Quantity: ${item.quantity}</p>
+              <p>Price: ₹${item.TotalPrice}</p>
+            </div>
+            <button class="remove-btn" onclick="removeItem('${item.ItemId}')">Remove</button>
+          `;
+          cartContainer.appendChild(div);
+        });
+
+        totalDiv.innerText = `Total: ₹${cartTotal.toFixed(2)}`;
+
+      } catch (error) {
+        alert('Error loading cart: ' + error.message);
+      }
+    }
+
+    async function removeItem(itemId) {
+  try {
+    const response = await fetch(`http://localhost:3000/shop/removecartitem/${itemId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to remove item');
+    }
+
+    alert('Item removed from cart.');
+    fetchCart(); // refresh the cart view
+  } catch (error) {
+    alert('Error removing item: ' + error.message);
+  }
+}
+
+
+    document.getElementById('checkout-btn').addEventListener('click', async () => {
+        const token = localStorage.getItem('token');
+const userId = localStorage.getItem('userId'); // Store this when user logs in
+
+
+fetch('http://localhost:3000/shop/orders', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer ' + token
+  },
+  body: JSON.stringify({ userId })
+})
+  .then(res => res.json())
+  .then(data => {
+    alert('Order placed!');
+    console.log(data.order);
+    window.location.href = 'index.html';
+  })
+  .catch(err => {
+    alert('Failed to place order: ' + err.message);
+  });
+
+});
+
+
+    fetchCart();
+  </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f4f4f4;
+  }
+  
+  .navbar {
+    background-color: #1a1a1a;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .nav-buttons {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .nav-btn {
+    background-color: #4caf50;
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: background 0.3s ease;
+  }
+  
+  .nav-btn:hover {
+    background-color: #45a049;
+  }
+  
+  .container {
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  .category-navbar {
+    background-color: #ffffff;
+    padding: 1rem 2rem;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .category-navbar select {
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    padding: 2rem;
+  }
+  
+  .product-card {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  }
+  .category-navbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: #eee;
+  }
+
+  .category-navbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: #eee;
+  }
+  
+  .category-navbar label {
+    font-weight: bold;
+  }
+  
+  .category-navbar select {
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  #user-actions {
+    margin-left: auto;  /* pushes icons right */
+  }
+  
+  #user-actions button {
+    font-size: 1.5rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    margin-left: 0.7rem;
+    transition: transform 0.2s ease;
+  }
+  
+  #user-actions button:hover {
+    transform: scale(1.2);
+  }
+  .footer {
+    background-color: black;
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+    /* No fixed positioning - it will stay at bottom after content */
+  }
+  
+  
+  

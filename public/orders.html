@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Orders</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+    .order-card {
+      background: white;
+      margin-bottom: 20px;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .order-card h3 {
+      margin: 0 0 10px;
+    }
+    .item {
+      padding: 4px 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Your Orders</h1>
+  <div id="orders-container"></div>
+
+  <script>
+    const token = localStorage.getItem('token');
+
+    async function loadOrders() {
+      try {
+        const res = await fetch('http://localhost:3000/shop/orders', {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+
+        const data = await res.json();
+        const container = document.getElementById('orders-container');
+
+        if (!res.ok) {
+          return container.innerHTML = `<p>${data.message}</p>`;
+        }
+
+        data.orders.forEach(order => {
+          const div = document.createElement('div');
+          div.className = 'order-card';
+
+          div.innerHTML = `
+            <h3>Order Date: ${new Date(order.dateOn).toLocaleString()}</h3>
+            <p><strong>Total:</strong> ₹${order.Total.toFixed(2)}</p>
+            <div><strong>Items:</strong></div>
+            ${order.OrderItems.map(item => `
+              <div class="item">
+                ${item.ItemName} × ${item.quantity} — ₹${item.price}
+              </div>`).join('')}
+          `;
+
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error('Failed to load orders:', err);
+        document.getElementById('orders-container').innerHTML = '<p>Failed to load orders.</p>';
+      }
+    }
+
+    loadOrders();
+  </script>
+</body>
+</html>

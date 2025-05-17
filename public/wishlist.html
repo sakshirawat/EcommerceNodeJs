@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wishlist</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fafafa;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .wishlist-container {
+      background: white;
+      width: 600px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #e76f51;
+    }
+
+    .wishlist-item {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+      padding: 15px 0;
+    }
+
+    .wishlist-item img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 20px;
+    }
+
+    .item-details {
+      flex: 1;
+    }
+
+    .item-name {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    .item-price {
+      color: #e76f51;
+      font-weight: 600;
+    }
+
+    .remove-btn {
+      background-color: #e63946;
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    .remove-btn:hover {
+      background-color: #b72a34;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 40px 0;
+      color: #999;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wishlist-container">
+    <h1>My Wishlist</h1>
+    <div id="wishlist-items"></div>
+    <div class="empty-message" id="empty-msg" style="display: none;">
+      Your wishlist is empty.
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("You're not logged in.");
+      window.location.href = 'login.html';
+    }
+  
+    const container = document.getElementById('wishlist-items');
+    const emptyMsg = document.getElementById('empty-msg');
+  
+    async function fetchWishlist() {
+      try {
+        const res = await fetch('http://localhost:3000/shop/wishlist', {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error('Failed to fetch wishlist');
+        const data = await res.json();
+        const wishlist = data?.wishlist || [];
+  
+        container.innerHTML = '';
+  
+        if (wishlist.length === 0) {
+          emptyMsg.style.display = 'block';
+          return;
+        }
+  
+        emptyMsg.style.display = 'none';
+  
+        wishlist.forEach(product => {
+          const item = document.createElement('div');
+          item.classList.add('wishlist-item');
+  
+          item.innerHTML = `
+            <img src="${product.imageUrl || 'https://via.placeholder.com/80'}" alt="${product.title}" />
+            <div class="item-details">
+              <div class="item-name">${product.title}</div>
+              <div class="item-price">₹${product.price}</div>
+            </div>
+            <button class="remove-btn">Remove</button>
+            <button class="add-to-cart">Add to Cart</button>
+          `;
+  
+          // Remove button
+          item.querySelector('.remove-btn').addEventListener('click', async () => {
+            try {
+              const res = await fetch(`http://localhost:3000/shop/wishlist/${product._id}`, {
+                method: 'DELETE',
+                headers: {
+                  Authorization: 'Bearer ' + token
+                }
+              });
+              if (!res.ok) throw new Error('Failed to remove item');
+              item.remove();
+  
+              if (!document.querySelectorAll('.wishlist-item').length) {
+                emptyMsg.style.display = 'block';
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Could not remove item from wishlist.');
+            }
+          });
+  
+          // Add to Cart button
+          item.querySelector('.add-to-cart').addEventListener('click', async () => {
+            try {
+              const quantity = 1;
+  
+              const response = await fetch('http://localhost:3000/shop/cart', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                  _id: product._id,
+                  title: product.title,
+                  price: product.price,
+                  quantity
+                })
+              });
+  
+              if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to add to cart');
+              }
+  
+              const removeRes = await fetch(`http://localhost:3000/shop/wishlist/${product._id}`, {
+                method: 'DELETE',
+                headers: { Authorization: 'Bearer ' + token }
+              });
+  
+              if (!removeRes.ok) {
+                throw new Error('Failed to remove from wishlist after adding to cart');
+              }
+  
+              item.remove();
+  
+              if (!document.querySelectorAll('.wishlist-item').length) {
+                emptyMsg.style.display = 'block';
+              }
+  
+              alert(`Added "${product.title}" to Cart and removed from Wishlist.`);
+            } catch (error) {
+              console.error(error);
+              alert('Error adding to cart: ' + error.message);
+            }
+          });
+  
+          container.appendChild(item);
+        });
+      } catch (err) {
+        console.error(err);
+        alert('Error loading wishlist');
+      }
+    }
+  
+    // ✅ Correctly placed function call
+    fetchWishlist();
+  </script>
+  
+</body>
+</html>

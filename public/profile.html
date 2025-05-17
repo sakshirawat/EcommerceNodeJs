@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .profile-container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    .profile-container h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      background-color: #f9f9f9;
+    }
+
+    .btn-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 25px;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .edit-btn {
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    .edit-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .save-btn {
+      background-color: #28a745;
+      color: #fff;
+    }
+
+    .save-btn:hover {
+      background-color: #1e7e34;
+    }
+
+    input:disabled {
+      background-color: #e9ecef;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-container">
+    <h2>Your Profile</h2>
+    <form id="profile-form">
+      <label for="name">Name</label>
+      <input type="text" id="name" disabled />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" disabled  />
+
+      <label for="password">Change Password</label>
+      <input type="password" id="password" disabled  />
+
+      <label for="dob">Date of Birth</label>
+      <input type="date" id="dob" disabled />
+
+      <div class="btn-container">
+        <button type="button" class="edit-btn" id="edit-btn">Edit</button>
+        <button type="submit" class="save-btn" id="save-btn" disabled>Save</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+
+    const editBtn = document.getElementById('edit-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const inputs = document.querySelectorAll('input');
+
+    // Enable form inputs
+    editBtn.addEventListener('click', () => {
+      inputs.forEach(input => input.disabled = false);
+      saveBtn.disabled = false;
+    });
+
+    // Populate fields from API
+    // Populate fields from API
+    async function loadProfile() {
+  try {
+    const res = await fetch('http://localhost:3000/auth/profile', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+
+    if (!res.ok) throw new Error('Failed to fetch profile');
+
+    const data = await res.json();
+    const user = data.user; // 👈 Access nested user object
+
+    document.getElementById('name').value = user.name || '';
+    document.getElementById('email').value = user.email || '';
+    document.getElementById('dob').value = user.DOB ? user.DOB.split('T')[0] : '';
+    document.getElementById('password').value = ''; // Leave blank
+  } catch (err) {
+    alert('Failed to load profile');
+    console.error(err);
+  }
+}
+
+
+    // Submit updated data
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const updatedData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        DOB: document.getElementById('dob').value
+      };
+
+      try {
+        const res = await fetch('http://localhost:3000/auth/updateUser', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(updatedData)
+        });
+
+        if (!res.ok) throw new Error('Update failed');
+
+        alert('Profile updated successfully.');
+        inputs.forEach(input => input.disabled = true);
+        saveBtn.disabled = true;
+      } catch (err) {
+        alert('Error updating profile: ' + err.message);
+      }
+    });
+
+    loadProfile();
+  </script>
+</body>
+</html>

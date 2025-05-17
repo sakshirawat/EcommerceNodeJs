@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Product Detail</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      background: white;
+      margin: 30px auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    img {
+      max-width: 100%;
+      height: 300px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    h2 {
+      margin: 15px 0 10px;
+    }
+    p.description {
+      color: #555;
+      min-height: 60px;
+    }
+    strong.price {
+      font-size: 1.5rem;
+      color: #2a9d8f;
+      margin: 15px 0;
+      display: block;
+    }
+    .quantity-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0;
+      gap: 10px;
+    }
+    .quantity-controls button {
+      font-size: 1.2rem;
+      padding: 5px 15px;
+      cursor: pointer;
+    }
+    .quantity-controls span {
+      font-size: 1.2rem;
+      min-width: 30px;
+      text-align: center;
+      display: inline-block;
+    }
+    button.action-btn {
+      background-color: #2a9d8f;
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      margin: 10px 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    button.action-btn:hover {
+      background-color: #21867a;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="product-detail">
+    Loading product details...
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('id');
+    
+    const container = document.getElementById('product-detail');
+    const token = localStorage.getItem('token'); // get token from localStorage
+    
+    let quantity = 1;
+  
+    async function fetchProduct() {
+      try {
+        const res = await fetch(`http://localhost:3000/shop/getItems`);
+        if (!res.ok) throw new Error('Failed to fetch product');
+        const data = await res.json();
+        const product = data.items.find(item => item._id === productId);
+        if (!product) {
+          container.innerHTML = '<p>Product not found.</p>';
+          return;
+        }
+  
+        renderProduct(product);
+      } catch (err) {
+        container.innerHTML = '<p style="color:red;">Error loading product details.</p>';
+        console.error(err);
+      }
+    }
+  
+    function renderProduct(product) {
+      container.innerHTML = `
+        <img src="${product.imageUrl}" alt="${product.title}" />
+        <h2>${product.title}</h2>
+        <p class="description">${product.description}</p>
+        <strong class="price">₹${product.price.toFixed(2)}</strong>
+  
+        <div class="quantity-controls">
+          <button id="decrease">-</button>
+          <span id="quantity">${quantity}</span>
+          <button id="increase">+</button>
+        </div>
+  
+        <button class="action-btn" id="wishlist-btn">Add to Wishlist</button>
+        <button class="action-btn" id="cart-btn">Add to Cart</button>
+      `;
+  
+      document.getElementById('decrease').addEventListener('click', () => {
+        if (quantity > 1) {
+          quantity--;
+          document.getElementById('quantity').textContent = quantity;
+        }
+      });
+  
+      document.getElementById('increase').addEventListener('click', () => {
+        quantity++;
+        document.getElementById('quantity').textContent = quantity;
+      });
+  
+      document.getElementById('wishlist-btn').addEventListener('click', async () => {
+  if (!token) {
+    alert('Please login to add items to wishlist.');
+    window.location.href = 'login.html';
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/shop/addwishlist', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ productId: product._id })
+    });
+
+    const data = await response.json();
+    console.log('Response message:', data.message); 
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to add to wishlist');
+    }
+
+    if (data.message === 'Product already in wishlist') {
+      alert(`"${product.title}" is already in your wishlist.`);
+    } else {
+      alert(`Added "${product.title}" to Wishlist.`);
+    }
+  } catch (error) {
+    alert('Error adding to wishlist: ' + error.message);
+  }
+});
+  
+      document.getElementById('cart-btn').addEventListener('click', async () => {
+        if (!token) {
+          alert('Please login to add items to cart.');
+          window.location.href = 'login.html';
+          return;
+        }
+        try {
+          const response = await fetch('http://localhost:3000/shop/cart', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ _id: product._id, title: product.title, quantity })
+
+          });
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to add to cart');
+          }
+          alert(`Added "${product.title}" to Cart (Quantity: ${quantity}).`);
+        } catch (error) {
+          alert('Error adding to cart: ' + error.message);
+        }
+      });
+    }
+  
+    fetchProduct();
+  </script>
+  
+</body>
+</html>
