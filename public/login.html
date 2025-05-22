@@ -86,10 +86,10 @@
   <script>
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-
+  
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-
+  
       try {
         const response = await fetch('http://localhost:3000/auth/login', {
           method: 'POST',
@@ -98,25 +98,33 @@
           },
           body: JSON.stringify({ email, password })
         });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Login failed');
-        }
-
+  
         const result = await response.json();
-
+  
+        if (!response.ok) {
+          // 🔎 Check if it's a validation error
+          if (result.data && Array.isArray(result.data)) {
+            alert(result.data[0].msg); // show the first validation error message
+          } else {
+            alert(result.message || 'Login failed');
+          }
+          return;
+        }
+  
         // ✅ Store token and userId in localStorage
         localStorage.setItem('token', result.token);
         localStorage.setItem('userId', result.userId);
-
+  
         alert('Login successful!');
-        window.location.href = '/index.html'; // ✅ Redirect after successful login
+        window.location.href = '/index.html'; // Redirect after successful login
+  
       } catch (error) {
-        alert(error.message);
+        alert('An error occurred. Please try again later.');
+        console.error(error);
       }
     });
   </script>
+  
 
 </body>
 </html>

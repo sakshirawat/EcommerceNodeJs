@@ -65,33 +65,37 @@ exports.shopItems = (req, res, next) => {
       }
 
       return User.findById(req.userId)
-        .then(user => {
-          const updatedCartItems = [...user.cart.Items];
-          const CartItemIndex = updatedCartItems.findIndex(cp => item._id.toString() === cp.ItemId.toString());
+  .then(user => {
+    const updatedCartItems = [...user.cart.Items];
+    const CartItemIndex = updatedCartItems.findIndex(cp => item._id.toString() === cp.ItemId.toString());
 
-          if (CartItemIndex >= 0) {
-            // If item already exists in cart, update quantity and price
-            updatedCartItems[CartItemIndex].quantity += quantity;
-            updatedCartItems[CartItemIndex].TotalPrice += item.price * quantity;
-          } else {
-            // Otherwise, add new item to cart
-            updatedCartItems.push({
-              ItemId: itemId,
-              ItemName: itemName,
-              quantity: quantity,
-              price: item.price,
-              TotalPrice: item.price * quantity
-            });
-          }
+    if (CartItemIndex >= 0) {
+      updatedCartItems[CartItemIndex].quantity += quantity;
+      updatedCartItems[CartItemIndex].TotalPrice += item.price * quantity;
+    } else {
+      updatedCartItems.push({
+        ItemId: itemId,
+        ItemName: itemName,
+        quantity: quantity,
+        price: item.price,
+        TotalPrice: item.price * quantity
+      });
+    }
 
-          // Recalculate cart total
-          const CartTotal = updatedCartItems.reduce((sum, i) => sum + i.TotalPrice, 0);
-          user.cart = { Items: updatedCartItems, CartTotal };
+    // Assign updatedCartItems back to user.cart.Items
+    user.cart.Items = updatedCartItems;
 
-          return user.save().then(() => {
-            res.status(200).json({ message: 'Item added to cart' });
-          });
-        });
+    // Now recalculate CartTotal based on the updated items
+    user.cart.CartTotal = user.cart.Items.reduce((total, item) => {
+      const price = typeof item.TotalPrice === 'number' && !isNaN(item.TotalPrice) ? item.TotalPrice : 0;
+      return total + price;
+    }, 0);
+
+    return user.save().then(() => {
+      res.status(200).json({ message: 'Item added to cart' });
+    });
+  });
+
     })
     .catch(err => {
       next(err);
@@ -297,3 +301,68 @@ exports.getOrderFilter = (req, res, next) => {
       next(err);
     });
 };
+
+exports.increaseQuantity = async (req, res, next) => {
+    const userId = req.userId;
+    const productId = req.params.productId;
+  
+    try {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+  
+      const cartItem = user.cart.Items.find(item => item.ItemId.toString() === productId);
+      if (!cartItem) return res.status(404).json({ message: 'Product not found in cart' });
+  
+      // ✅ Safely update quantity and total price
+      cartItem.quantity = Number(cartItem.quantity || 0) + 1;
+      cartItem.TotalPrice = Number(cartItem.price || 0) * Number(cartItem.quantity);
+  
+      // ✅ Recalculate cart total
+      user.cart.CartTotal = user.cart.Items.reduce((total, item) => {
+        return total + (Number(item.TotalPrice) || 0);
+      }, 0);
+  
+      // ✅ Make sure Mongoose detects nested change
+      user.markModified('cart');
+  
+      await user.save(); // This will persist changes
+      res.status(200).json({ message: 'Quantity increased', cart: user.cart });
+  
+    } catch (err) {
+      next(err);
+    }
+  };
+  
+  
+  // Decrease quantity of product in cart
+  exports.decreaseQuantity = async (req, res, next) => {
+    const userId = req.userId;
+    const productId = req.params.productId;
+  
+    try {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+  
+      const cartItemIndex = user.cart.Items.findIndex(item => item.ItemId.toString() === productId);
+      if (cartItemIndex === -1) return res.status(404).json({ message: 'Product not found in cart' });
+  
+      let cartItem = user.cart.Items[cartItemIndex];
+      if (cartItem.quantity > 1) {
+        cartItem.quantity -= 1;
+        cartItem.TotalPrice = cartItem.price * cartItem.quantity;
+      } else {
+        // Remove item if quantity goes below 1
+        user.cart.Items.splice(cartItemIndex, 1);
+      }
+  
+      // recalculate cart total
+      user.cart.CartTotal = user.cart.Items.reduce((total, item) => total + item.TotalPrice, 0);
+
+      user.markModified('cart');
+  
+      await user.save();
+      res.status(200).json({ message: 'Quantity decreased', cart: user.cart });
+    } catch (err) {
+      next(err);
+    }
+  };

@@ -135,7 +135,12 @@
           div.innerHTML = `
             <div>
               <h4>${item.ItemName}</h4>
-              <p>Quantity: ${item.quantity}</p>
+              <p>
+        Quantity: 
+        <button onclick="decreaseQuantity('${item.ItemId}')" style="padding: 2px 8px; margin-right:5px;">−</button>
+        ${item.quantity}
+        <button onclick="increaseQuantity('${item.ItemId}')" style="padding: 2px 8px; margin-left:5px;">+</button>
+      </p>
               <p>Price: ₹${item.TotalPrice}</p>
             </div>
             <button class="remove-btn" onclick="removeItem('${item.ItemId}')">Remove</button>
@@ -167,6 +172,39 @@
     fetchCart(); // refresh the cart view
   } catch (error) {
     alert('Error removing item: ' + error.message);
+  }
+}
+async function increaseQuantity(itemId) {
+  try {
+    const response = await fetch(`http://localhost:3000/shop/cart/increase/${itemId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+
+    if (!response.ok) throw new Error('Failed to increase quantity');
+    
+    fetchCart(); // Refresh cart to reflect changes
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function decreaseQuantity(itemId) {
+  try {
+    const response = await fetch(`http://localhost:3000/shop/cart/decrease/${itemId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+
+    if (!response.ok) throw new Error('Failed to decrease quantity');
+    
+    fetchCart(); // Refresh cart to reflect changes
+  } catch (error) {
+    alert(error.message);
   }
 }
 

@@ -1,9 +1,8 @@
 require('dotenv').config();
-
-
 const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
+const { swaggerUi, swaggerDocs } = require('./swagger');
 const path = require('path');
 const cors = require('cors');
 
@@ -32,6 +31,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Parse incoming JSON requests
 app.use(bodyParser.json());
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));//swagger
+
 // ===================== Route Mounting ===================== //
 
 // Routes for authentication (signup, login, profile management)
@@ -59,7 +60,8 @@ mongoose.connect(MONGO_URI)
   .then(() => {
     console.log("MongoDB connected");
     app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
+      console.log(`Server is running on http://localhost:${PORT}`)
+      console.log('Swagger docs available at http://localhost:3000/api-docs');
     });
   })
 
