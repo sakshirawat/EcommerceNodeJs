@@ -34,7 +34,7 @@
 
     async function loadOrders() {
       try {
-        const res = await fetch('http://localhost:3000/shop/orders', {
+        const res = await fetch('https://ecommercenodejs-xlb6.onrender.com/shop/orders', {
           headers: { Authorization: 'Bearer ' + token }
         });
 

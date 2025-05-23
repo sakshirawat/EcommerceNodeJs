@@ -60,8 +60,9 @@ mongoose.connect(MONGO_URI)
   .then(() => {
     console.log("MongoDB connected");
     app.listen(PORT, () => {
+      console.log('MONGO_URI:', process.env.MONGO_URI);
       console.log(`Server is running on http://localhost:${PORT}`)
-      console.log('Swagger docs available at http://localhost:3000/api-docs');
+      console.log('Swagger docs available at https://ecommercenodejs-xlb6.onrender.com/api-docs');
     });
   })
 

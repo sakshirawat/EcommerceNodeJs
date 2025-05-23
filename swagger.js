@@ -15,7 +15,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: "http://localhost:3000",  // Change to your deployed backend URL
+        url: "https://ecommercenodejs-xlb6.onrender.com/",  // Change to your deployed backend URL
       },
     ],
     components: {

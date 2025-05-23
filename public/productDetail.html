@@ -91,7 +91,7 @@
   
     async function fetchProduct() {
       try {
-        const res = await fetch(`http://localhost:3000/shop/getItems`);
+        const res = await fetch(`https://ecommercenodejs-xlb6.onrender.com/shop/getItems`);
         if (!res.ok) throw new Error('Failed to fetch product');
         const data = await res.json();
         const product = data.items.find(item => item._id === productId);
@@ -144,7 +144,7 @@
   }
 
   try {
-    const response = await fetch('http://localhost:3000/shop/addwishlist', {
+    const response = await fetch('https://ecommercenodejs-xlb6.onrender.com/shop/addwishlist', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -177,7 +177,7 @@
           return;
         }
         try {
-          const response = await fetch('http://localhost:3000/shop/cart', {
+          const response = await fetch('https://ecommercenodejs-xlb6.onrender.com/shop/cart', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

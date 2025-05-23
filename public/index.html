@@ -53,6 +53,48 @@
       margin: 0 auto;
       padding: 20px;
     }
+
+    /* Responsive tweaks */
+    @media (max-width: 768px) {
+      .navbar {
+        justify-content: center;
+      }
+
+      .nav-buttons, #profile-container {
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+      }
+
+      .category-navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      #user-actions {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      #products {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        padding: 0 5px 30px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #products {
+        grid-template-columns: 1fr;
+        padding: 0 10px 30px;
+      }
+
+      #products img {
+        height: 200px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -102,10 +144,10 @@
   <script>
     async function fetchProducts(category = "") {
       try {
-        let url = 'http://localhost:3000/shop/getItems';
+        let url = 'https://ecommercenodejs-xlb6.onrender.com/shop/getItems';
         if (category) {
           // Correct backend route for category filtering
-          url = `http://localhost:3000/shop/getItemsByCategory/${category}`;
+          url = `https://ecommercenodejs-xlb6.onrender.com/shop/getItemsByCategory/${category}`;
         }
 
         const res = await fetch(url);
@@ -195,28 +237,33 @@
 
     // Delete account
     document.getElementById('delete-account').addEventListener('click', async () => {
-      const confirmDelete = confirm('Are you sure you want to delete your account? This action cannot be undone.');
-      if (!confirmDelete) return;
+  const confirmDelete = confirm('Are you sure you want to delete your account? This action cannot be undone.');
+  if (!confirmDelete) return;
 
-      try {
-        const res = await fetch('http://localhost:3000/auth/deleteUser', {
-          method: 'DELETE',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Failed to delete account');
+  const userId = localStorage.getItem('userId'); // or however you're storing/retrieving the user's ID
+  const token = localStorage.getItem('token');
 
-        alert('Account deleted successfully');
-        localStorage.removeItem('token');
-        window.location.href = 'login.html';
-      } catch (err) {
-        alert('Error: ' + err.message);
-        console.error(err);
+  try {
+    const res = await fetch(`https://ecommercenodejs-xlb6.onrender.com/auth/deleteUser/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
       }
     });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to delete account');
+
+    alert('Account deleted successfully');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    window.location.href = 'login.html';
+  } catch (err) {
+    alert('Error: ' + err.message);
+    console.error(err);
+  }
+});
+
   </script>
 </body>
 <footer class="footer">

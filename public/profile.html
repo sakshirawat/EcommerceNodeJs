@@ -127,7 +127,7 @@
     // Populate fields from API
     async function loadProfile() {
   try {
-    const res = await fetch('http://localhost:3000/auth/profile', {
+    const res = await fetch('https://ecommercenodejs-xlb6.onrender.com/auth/profile', {
       headers: { Authorization: 'Bearer ' + token }
     });
 
@@ -159,7 +159,7 @@
       };
 
       try {
-        const res = await fetch('http://localhost:3000/auth/updateUser', {
+        const res = await fetch('https://ecommercenodejs-xlb6.onrender.com/auth/updateUser', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
